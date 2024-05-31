@@ -179,12 +179,13 @@ class ListGetRecipeAPI(CreateAPIView):
                         except ValueError as ex: 
                             value = "'"+value+"'"
                         if field == 'avg_rating':
-                            having_conditions.append(f"{field} != '{value}'")
+                            having_conditions.append(f"{field} != {value}")
                         else:
-                            where_conditions.append(f"{field} != '{value}'")
+                            where_conditions.append(f"{field} != {value}")
 
                     elif operator == 'in':
                         value_s = [str(v) for v in value]
+                        value_s = [f'"{v}"' for v in value]
                         placeholders = ', '.join(value_s)
                         if field == 'avg_rating':
                             having_conditions.append(f"{field} IN ({placeholders})")
@@ -193,14 +194,15 @@ class ListGetRecipeAPI(CreateAPIView):
 
                     elif operator == 'not in':
                         value_s = [str(v) for v in value]
+                        value_s = [f'"{v}"' for v in value]
                         placeholders = ', '.join(value_s)
                         if field == 'avg_rating':
-                            having_conditions.append(f"{field} NOT IN '{value}'")
+                            having_conditions.append(f"{field} NOT IN ({placeholders})")
                         else:
-                            where_conditions.append(f"{field} NOT IN '{value}'")
+                            where_conditions.append(f"{field} NOT IN ({placeholders})")
 
                     elif operator == 'like':
-                        where_conditions.append(f"CAST({field} AS TEXT) LIKE '%{value}%'")
+                        having_conditions.append(f"CAST({field} AS TEXT) LIKE '%{value}%'")
 
             if where_conditions or having_conditions:
                 if where_conditions:
@@ -331,7 +333,7 @@ class ListUpdateDeleteRecipeAPI(RetrieveUpdateDestroyAPIView):
                 LEFT JOIN
                 tabRecipe AS rc ON tr.recipe_id = rc.id
                 WHERE 
-                tr.id = {kwargs['pk']};  
+                tr.recipe_id = {kwargs['pk']};  
             """)
             rows = cursor.fetchall()
         columns = [col[0] for col in cursor.description]
